@@ -906,6 +906,12 @@ function displayNameInput() {
   textAlign(CENTER);
   text("Enter Your Name", width / 2, 230);
   
+  // Current name display
+  fill(255);
+  textSize(16);
+  textAlign(CENTER);
+  text("Current Name: " + playerName, width / 2, 250);
+  
   // Name input box
   fill(isEnteringName ? 220 : 200);
   rect(70, 260, 260, 40, 5);
@@ -937,7 +943,7 @@ function displayNameInput() {
 
 // Handle mouse clicks for the name input
 function mousePressed() {
-  if (gameState === "gameover" && !nameSubmitted) {
+  if (gameState === "gameover") { // Allow name change anytime game is over
     // Name field click
     if (mouseX > 70 && mouseX < 330 && mouseY > 260 && mouseY < 300) {
       isEnteringName = true;
