@@ -1,4 +1,8 @@
 // Global variables
+let canvasWidth = 400;
+let canvasHeight = 600;
+let scaleFactor = 1;
+
 let spaceshipX, spaceshipY;
 let projectiles = [];
 let stars = [];
@@ -32,19 +36,20 @@ let startButton;
 let leaderboardButton;
 
 function setup() {
-  createCanvas(400, 600);
+  // Make canvas responsive to screen size
+  setupResponsiveCanvas();
   
   // Initialize spaceship position
-  spaceshipX = width / 2;
-  spaceshipY = height - 50;
+  spaceshipX = canvasWidth / 2;
+  spaceshipY = canvasHeight - 50;
   
   // Create starry background
-  bg = createGraphics(400, 600);
+  bg = createGraphics(canvasWidth, canvasHeight);
   bg.background(0); // Black space
   bg.fill(255); // White stars
   for (let i = 0; i < 100; i++) {
-    let x = random(400);
-    let y = random(600);
+    let x = random(canvasWidth);
+    let y = random(canvasHeight);
     bg.ellipse(x, y, 2, 2); // Small dots for stars
   }
   
@@ -56,19 +61,77 @@ function setup() {
 
   // Create start button
   startButton = {
-    x: width/2 - 60,
-    y: height/2 + 50,
+    x: canvasWidth/2 - 60,
+    y: canvasHeight/2 + 50,
     width: 120,
     height: 40
   };
 
   // Create leaderboard button for game over screen
   leaderboardButton = {
-    x: width/2 - 80,
-    y: height/2 + 100,
+    x: canvasWidth/2 - 80,
+    y: canvasHeight/2 + 100,
     width: 160,
     height: 40
   };
+}
+
+// Function to set up responsive canvas
+function setupResponsiveCanvas() {
+  // Get the window dimensions
+  let windowW = windowWidth;
+  let windowH = windowHeight;
+  
+  // Determine the best canvas size while maintaining aspect ratio
+  if (windowW / windowH > 2/3) {
+    // Window is wider than our target ratio
+    canvasHeight = min(windowH * 0.95, 600);
+    canvasWidth = canvasHeight * 2/3;
+  } else {
+    // Window is taller or equal to our target ratio
+    canvasWidth = min(windowW * 0.95, 400);
+    canvasHeight = canvasWidth * 3/2;
+  }
+  
+  // Calculate scale factor for game elements
+  scaleFactor = canvasWidth / 400;
+  
+  // Create the canvas
+  createCanvas(canvasWidth, canvasHeight);
+}
+
+// Handle window resize
+function windowResized() {
+  setupResponsiveCanvas();
+  
+  // Recreate background
+  bg = createGraphics(canvasWidth, canvasHeight);
+  bg.background(0);
+  bg.fill(255);
+  for (let i = 0; i < 100; i++) {
+    let x = random(canvasWidth);
+    let y = random(canvasHeight);
+    bg.ellipse(x, y, 2, 2);
+  }
+  
+  // Update button positions
+  startButton = {
+    x: canvasWidth/2 - 60 * scaleFactor,
+    y: canvasHeight/2 + 50 * scaleFactor,
+    width: 120 * scaleFactor,
+    height: 40 * scaleFactor
+  };
+
+  leaderboardButton = {
+    x: canvasWidth/2 - 80 * scaleFactor,
+    y: canvasHeight/2 + 100 * scaleFactor,
+    width: 160 * scaleFactor,
+    height: 40 * scaleFactor
+  };
+  
+  // Adjust spaceship position
+  spaceshipX = constrain(spaceshipX * canvasWidth / width, 10, canvasWidth - 10);
+  spaceshipY = constrain(spaceshipY * canvasHeight / height, 20, canvasHeight - 20);
 }
 
 function draw() {
@@ -82,14 +145,14 @@ function draw() {
       fill(255);
       textSize(24);
       textAlign(CENTER, CENTER);
-      text("Star Shooting Game", width / 2, height / 2 - 20);
+      text("Star Shooting Game", canvasWidth / 2, canvasHeight / 2 - 20);
       
       // Draw start button
       fill(0, 150, 255);
       rect(startButton.x, startButton.y, startButton.width, startButton.height, 10);
       fill(255);
       textSize(20);
-      text("START", width/2, startButton.y + startButton.height/2);
+      text("START", canvasWidth/2, startButton.y + startButton.height/2);
     } else if (gameState === "playing") {
       // Game logic
       handleSpaceship();
@@ -132,21 +195,21 @@ function draw() {
           fill(255);
           textSize(24);
           textAlign(CENTER, CENTER);
-          text("Game Over\nFinal Score: " + score, width / 2, height / 2 - 40);
+          text("Game Over\nFinal Score: " + score, canvasWidth / 2, canvasHeight / 2 - 40);
           
           // Draw restart button
           fill(0, 200, 255);
           rect(startButton.x, startButton.y, startButton.width, startButton.height, 10);
           fill(255);
           textSize(20);
-          text("RESTART", width/2, startButton.y + startButton.height/2);
+          text("RESTART", canvasWidth/2, startButton.y + startButton.height/2);
           
           // Draw leaderboard button
           fill(200, 200, 0);
           rect(leaderboardButton.x, leaderboardButton.y, leaderboardButton.width, leaderboardButton.height, 10);
           fill(255);
           textSize(20);
-          text("LEADERBOARD", width/2, leaderboardButton.y + leaderboardButton.height/2);
+          text("LEADERBOARD", canvasWidth/2, leaderboardButton.y + leaderboardButton.height/2);
         }
       }
     }
@@ -157,7 +220,7 @@ function draw() {
     fill(255, 0, 0);
     textSize(20);
     textAlign(CENTER);
-    text("Game Error! Check console.", width/2, height/2);
+    text("Game Error! Check console.", canvasWidth/2, canvasHeight/2);
   }
 }
 
@@ -303,17 +366,17 @@ function displayLeaderboard() {
   fill(255);
   textSize(24);
   textAlign(CENTER);
-  text("Leaderboard", width / 2, 130);
+  text("Leaderboard", canvasWidth / 2, 130);
   
   // Add your score prominently
   fill(255, 255, 0);
   textSize(14);
-  text("Your Score: " + score, width / 2, 155);
+  text("Your Score: " + score, canvasWidth / 2, 155);
   
   // Display loading if data is not yet loaded
   if (leaderboardData.length === 0) {
     textSize(16);
-    text("Loading...", width / 2, 250);
+    text("Loading...", canvasWidth / 2, 250);
   } else {
     // Header
     textSize(16);
@@ -365,28 +428,33 @@ function displayLeaderboard() {
   // Make restart instruction clearer
   fill(0, 255, 100);
   textSize(16);
-  text("Press SPACE to Restart", width / 2, 490);
+  text("Press SPACE to Restart", canvasWidth / 2, 490);
 }
 
 // Spaceship movement and drawing
 function handleSpaceship() {
   // Draw spaceship
   fill(150); // Gray body
-  triangle(spaceshipX, spaceshipY - 10, spaceshipX - 10, spaceshipY + 10, spaceshipX + 10, spaceshipY + 10);
+  let shipSize = 10 * scaleFactor;
+  triangle(
+    spaceshipX, spaceshipY - shipSize, 
+    spaceshipX - shipSize, spaceshipY + shipSize, 
+    spaceshipX + shipSize, spaceshipY + shipSize
+  );
   fill(255, 0, 0); // Red cockpit
-  ellipse(spaceshipX, spaceshipY, 5, 5);
+  ellipse(spaceshipX, spaceshipY, 5 * scaleFactor, 5 * scaleFactor);
   
   // Draw shield if active
   if (activePowerups.shield) {
     noFill();
     stroke(255, 0, 255, 150);
-    ellipse(spaceshipX, spaceshipY, 30, 30);
+    ellipse(spaceshipX, spaceshipY, 30 * scaleFactor, 30 * scaleFactor);
     noStroke();
   }
   
   // Add engine trail
   if (frameCount % 3 === 0) {
-    createTrail(spaceshipX, spaceshipY + 10, "engine");
+    createTrail(spaceshipX, spaceshipY + shipSize, "engine");
   }
 }
 
@@ -416,7 +484,7 @@ function handleProjectiles() {
 function handleStars() {
   // Spawn new star every 60 frames
   if (frameCount % 60 === 0) {
-    stars.push({ x: random(20, width - 20), y: 0, size: random(10, 20) });
+    stars.push({ x: random(20, canvasWidth - 20), y: 0, size: random(10, 20) });
   }
   
   for (let i = stars.length - 1; i >= 0; i--) {
@@ -445,7 +513,7 @@ function handleStars() {
     }
     
     // Remove if off-screen
-    if (star.y > height || star.y < 0 || star.x < 0 || star.x > width) {
+    if (star.y > canvasHeight || star.y < 0 || star.x < 0 || star.x > canvasWidth) {
       stars.splice(i, 1);
     }
   }
@@ -481,7 +549,7 @@ function handleEnemies() {
     let health = type === "zigzag" ? baseHealth + 2 : baseHealth;
 
     enemies.push({
-      x: random(30, width - 30),
+      x: random(30, canvasWidth - 30),
       y: 0,
       type: type,
       health: health,
@@ -517,14 +585,14 @@ function handleEnemies() {
     } else if (enemy.type === "zigzag") {
       enemy.x += enemy.speedX;
       enemy.y += enemy.speedY;
-      if (enemy.x < 20 || enemy.x > width - 20) {
+      if (enemy.x < 20 || enemy.x > canvasWidth - 20) {
         enemy.speedX *= -1;
       }
     }
 
     drawEnemy(enemy);
 
-    if (enemy.y > height) {
+    if (enemy.y > canvasHeight) {
       enemies.splice(i, 1);
     }
   }
@@ -560,7 +628,7 @@ function handlePowerups() {
   if (frameCount % powerupSpawnRate === 0) {
     let type = random(["rapidfire", "tripleshot", "shield"]);
     powerups.push({ 
-      x: random(20, width - 20), 
+      x: random(20, canvasWidth - 20), 
       y: 0, 
       type: type,
       size: 15 
@@ -583,7 +651,7 @@ function handlePowerups() {
     drawPowerup(powerups[i]);
     
     // Remove if off-screen
-    if (powerups[i].y > height) {
+    if (powerups[i].y > canvasHeight) {
       powerups.splice(i, 1);
     }
   }
@@ -882,13 +950,13 @@ function displayScore() {
   fill(255);
   textSize(20);
   textAlign(CENTER);
-  text("Score: " + score, width / 2, 30);
+  text("Score: " + score, canvasWidth / 2, 30);
 }
 
 // Reset game variables
 function resetGame() {
-  spaceshipX = width / 2;
-  spaceshipY = height - 50;
+  spaceshipX = canvasWidth / 2;
+  spaceshipY = canvasHeight - 50;
   projectiles = [];
   stars = [];
   enemies = [];
@@ -913,40 +981,40 @@ function resetGame() {
 function displayNameInput() {
   // Background
   fill(0, 0, 0, 200);
-  rect(50, 200, 300, 200, 10);
+  rect(50 * scaleFactor, 200 * scaleFactor, 300 * scaleFactor, 200 * scaleFactor, 10 * scaleFactor);
   
   // Title
   fill(255);
-  textSize(24);
+  textSize(24 * scaleFactor);
   textAlign(CENTER);
-  text("Enter Your Name", width / 2, 230);
+  text("Enter Your Name", canvasWidth / 2, 230 * scaleFactor);
   
   // Name input box (make it more visible)
   fill(isEnteringName ? 220 : 180);
-  rect(70, 260, 260, 40, 5);
+  rect(70 * scaleFactor, 260 * scaleFactor, 260 * scaleFactor, 40 * scaleFactor, 5 * scaleFactor);
   
   // Name text
   fill(0);
   textAlign(LEFT);
-  textSize(18);
-  text(playerName + (isEnteringName && frameCount % 30 < 15 ? "|" : ""), 80, 285);
+  textSize(18 * scaleFactor);
+  text(playerName + (isEnteringName && frameCount % 30 < 15 ? "|" : ""), 80 * scaleFactor, 285 * scaleFactor);
   
   // Submit button (make it more prominent)
   if (playerName.trim() !== "") {
     fill(0, 150, 255);
-    rect(150, 320, 100, 40, 5);
+    rect(150 * scaleFactor, 320 * scaleFactor, 100 * scaleFactor, 40 * scaleFactor, 5 * scaleFactor);
     
     fill(255);
-    textSize(16);
+    textSize(16 * scaleFactor);
     textAlign(CENTER, CENTER);
-    text("Submit", 200, 340);
+    text("Submit", canvasWidth / 2, 340 * scaleFactor);
   }
   
   // Instructions
   fill(200);
-  textSize(14);
+  textSize(14 * scaleFactor);
   textAlign(CENTER);
-  text("Tap the box to enter your name", width / 2, 380);
+  text("Tap the box to enter your name", canvasWidth / 2, 380 * scaleFactor);
 }
 
 // Handle touch events for mobile
@@ -963,13 +1031,14 @@ function touchStarted() {
     
     // Check if spaceship is touched (for shooting)
     let d = dist(mouseX, mouseY, spaceshipX, spaceshipY);
-    if (d < 30) { // Increased touch area for better mobile experience
+    if (d < 30 * scaleFactor) { // Increased touch area for better mobile experience
       isShooting = true;
     }
   } else if (gameState === "gameover") {
     if (!nameSubmitted) {
       // Name input field click (make it bigger for mobile)
-      if (mouseX > 70 && mouseX < 330 && mouseY > 260 && mouseY < 300) {
+      if (mouseX > 70 * scaleFactor && mouseX < 330 * scaleFactor && 
+          mouseY > 260 * scaleFactor && mouseY < 300 * scaleFactor) {
         isEnteringName = true;
         // Create a temporary input element for mobile keyboard
         let input = document.createElement('input');
@@ -982,23 +1051,47 @@ function touchStarted() {
         input.style.fontSize = '16px'; // Prevent zoom on iOS
         input.maxLength = 20;
         
+        // Handle input changes
         input.addEventListener('input', function(e) {
           playerName = e.target.value;
         });
         
+        // Handle Enter key press
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.keyCode === 13) {
+            if (playerName.trim() !== "") {
+              nameSubmitted = true;
+              isEnteringName = false;
+              localStorage.setItem('playerName', playerName);
+              document.body.removeChild(input);
+            }
+          }
+        });
+        
+        // Handle blur (clicking outside)
         input.addEventListener('blur', function() {
-          document.body.removeChild(input);
+          if (document.body.contains(input)) {
+            document.body.removeChild(input);
+          }
         });
         
         document.body.appendChild(input);
         input.focus();
       }
       // Submit button click
-      else if (mouseX > 150 && mouseX < 250 && mouseY > 320 && mouseY < 360) {
+      else if (mouseX > 150 * scaleFactor && mouseX < 250 * scaleFactor && 
+               mouseY > 320 * scaleFactor && mouseY < 360 * scaleFactor) {
         if (playerName.trim() !== "") {
           nameSubmitted = true;
           isEnteringName = false;
           localStorage.setItem('playerName', playerName);
+          // Remove any stray input elements
+          let inputs = document.querySelectorAll('input');
+          inputs.forEach(input => {
+            if (document.body.contains(input)) {
+              document.body.removeChild(input);
+            }
+          });
         }
       }
     } else {
@@ -1022,7 +1115,8 @@ function touchStarted() {
   
   // Handle back button in leaderboard view
   if (gameState === "gameover" && autoShowLeaderboard) {
-    if (mouseX > 150 && mouseX < 250 && mouseY > 450 && mouseY < 480) {
+    if (mouseX > 150 * scaleFactor && mouseX < 250 * scaleFactor && 
+        mouseY > 450 * scaleFactor && mouseY < 480 * scaleFactor) {
       autoShowLeaderboard = false;
     }
   }
@@ -1036,8 +1130,8 @@ function touchMoved() {
     let dx = mouseX - touchStartX;
     let dy = mouseY - touchStartY;
     
-    spaceshipX = constrain(spaceshipX + dx, 10, width - 10);
-    spaceshipY = constrain(spaceshipY + dy, 20, height - 20);
+    spaceshipX = constrain(spaceshipX + dx, 10, canvasWidth - 10);
+    spaceshipY = constrain(spaceshipY + dy, 20, canvasHeight - 20);
     
     touchStartX = mouseX;
     touchStartY = mouseY;
