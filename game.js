@@ -438,70 +438,60 @@ function handleStars() {
 
 // Handle enemies
 function handleEnemies() {
-  // Spawn rate increases dramatically with score
-  let baseSpawnRate = 180; // Slow at the beginning
-  let minSpawnRate = 30;   // Maximum spawn frequency (lower = more enemies)
-  
-  // More aggressive scaling based on score
+  // Base spawn rate and speed
+  let baseSpawnRate = 180;
+  let minSpawnRate = 30;
+  let baseSpeedY = 1.5;
+
+  // Adjust spawn rate and speed based on score
   let spawnRate;
-  if (score < 100) {
-    // Slow and steady at the beginning
+  let speedMultiplier = 1;
+
+  if (score < 50) {
     spawnRate = baseSpawnRate;
+  } else if (score < 100) {
+    spawnRate = Math.max(baseSpawnRate - Math.floor((score - 50) / 10) * 10, 100);
+    speedMultiplier = 1.5;
   } else if (score < 300) {
-    // Medium difficulty
-    spawnRate = Math.max(baseSpawnRate - Math.floor((score-100)/20) * 15, 100);
+    spawnRate = Math.max(100 - Math.floor((score - 100) / 20) * 5, minSpawnRate);
+    speedMultiplier = 2.0;
   } else {
-    // Hard difficulty
-    spawnRate = Math.max(100 - Math.floor((score-300)/50) * 10, minSpawnRate);
+    spawnRate = minSpawnRate;
+    speedMultiplier = 2;
   }
-  
+
   if (frameCount % spawnRate === 0) {
     let type = random(["chaser", "shooter", "zigzag"]);
-    
-    // Enemy health increases more significantly with score
-    let baseHealth;
-    if (score < 100) {
-      baseHealth = 1; // Easy to kill at the beginning
-    } else if (score < 300) {
-      baseHealth = 1 + Math.floor((score-100)/50); // Gradually tougher
-    } else {
-      baseHealth = 5 + Math.floor((score-300)/100); // Very tough at high scores
-    }
-    
-    // Zigzag enemies are always tougher
+    let baseHealth = score < 100 ? 1 : 1 + Math.floor((score - 100) / 50);
     let health = type === "zigzag" ? baseHealth + 2 : baseHealth;
-    
-    enemies.push({ 
-      x: random(30, width - 30), 
-      y: 0, 
+
+    enemies.push({
+      x: random(30, width - 30),
+      y: 0,
       type: type,
       health: health,
       size: type === "shooter" ? 25 : 20,
       speedX: type === "zigzag" ? (random() > 0.5 ? 1.5 : -1.5) : 0,
-      speedY: type === "chaser" ? 2.5 : 1.5,
+      speedY: baseSpeedY * speedMultiplier,
       lastShot: frameCount
     });
   }
-  
+
   for (let i = enemies.length - 1; i >= 0; i--) {
     let enemy = enemies[i];
-    
+
     // Move enemy based on type
     if (enemy.type === "chaser") {
-      // Chase the player
       if (enemy.x < spaceshipX) enemy.x += 1;
       if (enemy.x > spaceshipX) enemy.x -= 1;
       enemy.y += enemy.speedY;
     } else if (enemy.type === "shooter") {
-      // Moves slower but shoots
       enemy.y += enemy.speedY;
-      
-      // Shoot every 120 frames
       if (frameCount - enemy.lastShot > 120) {
         let angle = atan2(spaceshipY - enemy.y, spaceshipX - enemy.x);
-        stars.push({ 
-          x: enemy.x, 
-          y: enemy.y, 
+        stars.push({
+          x: enemy.x,
+          y: enemy.y,
           size: 10,
           speedX: cos(angle) * 3,
           speedY: sin(angle) * 3,
@@ -510,20 +500,15 @@ function handleEnemies() {
         enemy.lastShot = frameCount;
       }
     } else if (enemy.type === "zigzag") {
-      // Zig-zag movement
       enemy.x += enemy.speedX;
       enemy.y += enemy.speedY;
-      
-      // Bounce off walls
       if (enemy.x < 20 || enemy.x > width - 20) {
         enemy.speedX *= -1;
       }
     }
-    
-    // Draw enemy
+
     drawEnemy(enemy);
-    
-    // Remove if off-screen
+
     if (enemy.y > height) {
       enemies.splice(i, 1);
     }

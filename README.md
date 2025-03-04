@@ -2,7 +2,6 @@
 
 A fun space-themed shooting game built with JavaScript and p5.js where players control a spaceship to shoot stars and enemies while collecting power-ups.
 
-
 ## How to Play
 
 1. Use arrow keys to move your spaceship
@@ -29,7 +28,8 @@ A fun space-themed shooting game built with JavaScript and p5.js where players c
 - **Zigzag**: Move in a zigzag pattern and have more health
 
 ### Difficulty Progression
-- Under 100 points: Enemies spawn slowly and have only 1 health
+- Under 50 points: Enemies spawn slowly and have only 1 health
+- 50-100 points: Enemies move faster and spawn more frequently
 - 100-300 points: Medium difficulty with gradually increasing spawn rates and health
 - 300+ points: Hard difficulty with frequent enemy spawns and enemies requiring multiple hits
 
@@ -54,6 +54,7 @@ Power-ups appear more frequently as your score increases, and enemies have a hig
 - Implement more enemy types
 - Add boss battles
 - Create more power-ups
+- Introduce achievements for reaching milestones
 
 ## Credits
 
