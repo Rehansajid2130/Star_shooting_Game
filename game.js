@@ -25,6 +25,12 @@ let autoShowLeaderboard = true;
 let isEnteringName = false; // Flag to track if user is entering name
 let nameSubmitted = false; // Flag to track if name has been submitted
 
+let touchStartX = 0;
+let touchStartY = 0;
+let isShooting = false;
+let startButton;
+let leaderboardButton;
+
 function setup() {
   createCanvas(400, 600);
   
@@ -47,6 +53,22 @@ function setup() {
   
   // Load player data from local storage if available
   loadPlayerData();
+
+  // Create start button
+  startButton = {
+    x: width/2 - 60,
+    y: height/2 + 50,
+    width: 120,
+    height: 40
+  };
+
+  // Create leaderboard button for game over screen
+  leaderboardButton = {
+    x: width/2 - 80,
+    y: height/2 + 100,
+    width: 160,
+    height: 40
+  };
 }
 
 function draw() {
@@ -60,7 +82,14 @@ function draw() {
       fill(255);
       textSize(24);
       textAlign(CENTER, CENTER);
-      text("Star Shooting Game\nPress Space to Start", width / 2, height / 2);
+      text("Star Shooting Game", width / 2, height / 2 - 20);
+      
+      // Draw start button
+      fill(0, 150, 255);
+      rect(startButton.x, startButton.y, startButton.width, startButton.height, 10);
+      fill(255);
+      textSize(20);
+      text("START", width/2, startButton.y + startButton.height/2);
     } else if (gameState === "playing") {
       // Game logic
       handleSpaceship();
@@ -72,13 +101,25 @@ function draw() {
       checkCollisions();
       displayScore();
       displayActivePowerups();
+
+      // Handle continuous shooting if touch is held
+      if (isShooting) {
+        let cooldown = activePowerups.rapidfire ? 5 : 10;
+        if (frameCount - lastShotFrame > cooldown) {
+          if (activePowerups.tripleshot) {
+            projectiles.push({ x: spaceshipX, y: spaceshipY - 10 });
+            projectiles.push({ x: spaceshipX - 8, y: spaceshipY - 5 });
+            projectiles.push({ x: spaceshipX + 8, y: spaceshipY - 5 });
+          } else {
+            projectiles.push({ x: spaceshipX, y: spaceshipY - 10 });
+          }
+          lastShotFrame = frameCount;
+        }
+      }
     } else if (gameState === "gameover") {
-      // First ask for name if not submitted
       if (!nameSubmitted) {
         displayNameInput();
-      } 
-      // Then show leaderboard or game over screen
-      else if (!formSubmitted) {
+      } else if (!formSubmitted) {
         submitScore();
         formSubmitted = true;
       }
@@ -93,14 +134,19 @@ function draw() {
           textAlign(CENTER, CENTER);
           text("Game Over\nFinal Score: " + score, width / 2, height / 2 - 40);
           
-          // Make restart instructions more prominent
+          // Draw restart button
           fill(0, 200, 255);
+          rect(startButton.x, startButton.y, startButton.width, startButton.height, 10);
+          fill(255);
           textSize(20);
-          text("Press SPACE to Restart", width / 2, height / 2 + 40);
+          text("RESTART", width/2, startButton.y + startButton.height/2);
           
-          fill(200);
-          textSize(16);
-          text("Press L to toggle Leaderboard", width / 2, height / 2 + 80);
+          // Draw leaderboard button
+          fill(200, 200, 0);
+          rect(leaderboardButton.x, leaderboardButton.y, leaderboardButton.width, leaderboardButton.height, 10);
+          fill(255);
+          textSize(20);
+          text("LEADERBOARD", width/2, leaderboardButton.y + leaderboardButton.height/2);
         }
       }
     }
@@ -324,37 +370,6 @@ function displayLeaderboard() {
 
 // Spaceship movement and drawing
 function handleSpaceship() {
-  // Movement with arrow keys
-  if (keyIsDown(LEFT_ARROW) && spaceshipX > 10) {
-    spaceshipX -= 5;
-  }
-  if (keyIsDown(RIGHT_ARROW) && spaceshipX < width - 10) {
-    spaceshipX += 5;
-  }
-  if (keyIsDown(UP_ARROW) && spaceshipY > 20) {
-    spaceshipY -= 5;
-  }
-  if (keyIsDown(DOWN_ARROW) && spaceshipY < height - 20) {
-    spaceshipY += 5;
-  }
-  
-  // Shooting with spacebar (with cooldown)
-  if (keyIsDown(32)) { // Space key
-    let cooldown = activePowerups.rapidfire ? 5 : 10; // Faster shooting with powerup
-    
-    if (frameCount - lastShotFrame > cooldown) {
-      if (activePowerups.tripleshot) {
-        // Triple shot pattern
-        projectiles.push({ x: spaceshipX, y: spaceshipY - 10 });
-        projectiles.push({ x: spaceshipX - 8, y: spaceshipY - 5 });
-        projectiles.push({ x: spaceshipX + 8, y: spaceshipY - 5 });
-      } else {
-        projectiles.push({ x: spaceshipX, y: spaceshipY - 10 });
-      }
-      lastShotFrame = frameCount;
-    }
-  }
-  
   // Draw spaceship
   fill(150); // Gray body
   triangle(spaceshipX, spaceshipY - 10, spaceshipX - 10, spaceshipY + 10, spaceshipX + 10, spaceshipY + 10);
@@ -906,91 +921,131 @@ function displayNameInput() {
   textAlign(CENTER);
   text("Enter Your Name", width / 2, 230);
   
-  // Current name display
-  fill(255);
-  textSize(16);
-  textAlign(CENTER);
-  text("Current Name: " + playerName, width / 2, 250);
-  
-  // Name input box
-  fill(isEnteringName ? 220 : 200);
+  // Name input box (make it more visible)
+  fill(isEnteringName ? 220 : 180);
   rect(70, 260, 260, 40, 5);
   
-  // Name text with cursor
+  // Name text
   fill(0);
   textAlign(LEFT);
   textSize(18);
   text(playerName + (isEnteringName && frameCount % 30 < 15 ? "|" : ""), 80, 285);
   
-  // Submit button
+  // Submit button (make it more prominent)
   if (playerName.trim() !== "") {
     fill(0, 150, 255);
-  } else {
-    fill(150);
+    rect(150, 320, 100, 40, 5);
+    
+    fill(255);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text("Submit", 200, 340);
   }
-  rect(150, 320, 100, 40, 5);
-  
-  fill(255);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text("Submit", 200, 340);
   
   // Instructions
   fill(200);
-  textSize(12);
-  text("Click to type, then Submit", width / 2, 380);
+  textSize(14);
+  textAlign(CENTER);
+  text("Tap the box to enter your name", width / 2, 380);
 }
 
-// Handle mouse clicks for the name input
-function mousePressed() {
-  if (gameState === "gameover") { // Allow name change anytime game is over
-    // Name field click
-    if (mouseX > 70 && mouseX < 330 && mouseY > 260 && mouseY < 300) {
-      isEnteringName = true;
+// Handle touch events for mobile
+function touchStarted() {
+  if (gameState === "start") {
+    // Check if start button is pressed
+    if (mouseX > startButton.x && mouseX < startButton.x + startButton.width &&
+        mouseY > startButton.y && mouseY < startButton.y + startButton.height) {
+      gameState = "playing";
     }
-    // Submit button click
-    else if (mouseX > 150 && mouseX < 250 && mouseY > 320 && mouseY < 360) {
-      if (playerName.trim() !== "") {
-        nameSubmitted = true;
-        isEnteringName = false;
-        localStorage.setItem('playerName', playerName); // Save for future games
+  } else if (gameState === "playing") {
+    touchStartX = mouseX;
+    touchStartY = mouseY;
+    
+    // Check if spaceship is touched (for shooting)
+    let d = dist(mouseX, mouseY, spaceshipX, spaceshipY);
+    if (d < 30) { // Increased touch area for better mobile experience
+      isShooting = true;
+    }
+  } else if (gameState === "gameover") {
+    if (!nameSubmitted) {
+      // Name input field click (make it bigger for mobile)
+      if (mouseX > 70 && mouseX < 330 && mouseY > 260 && mouseY < 300) {
+        isEnteringName = true;
+        // Create a temporary input element for mobile keyboard
+        let input = document.createElement('input');
+        input.type = 'text';
+        input.value = playerName;
+        input.style.position = 'fixed';
+        input.style.top = '50%';
+        input.style.left = '50%';
+        input.style.transform = 'translate(-50%, -50%)';
+        input.style.fontSize = '16px'; // Prevent zoom on iOS
+        input.maxLength = 20;
+        
+        input.addEventListener('input', function(e) {
+          playerName = e.target.value;
+        });
+        
+        input.addEventListener('blur', function() {
+          document.body.removeChild(input);
+        });
+        
+        document.body.appendChild(input);
+        input.focus();
+      }
+      // Submit button click
+      else if (mouseX > 150 && mouseX < 250 && mouseY > 320 && mouseY < 360) {
+        if (playerName.trim() !== "") {
+          nameSubmitted = true;
+          isEnteringName = false;
+          localStorage.setItem('playerName', playerName);
+        }
+      }
+    } else {
+      // Check restart button
+      if (mouseX > startButton.x && mouseX < startButton.x + startButton.width &&
+          mouseY > startButton.y && mouseY < startButton.y + startButton.height) {
+        resetGame();
+        gameState = "start";
+      }
+      
+      // Check leaderboard button
+      if (mouseX > leaderboardButton.x && mouseX < leaderboardButton.x + leaderboardButton.width &&
+          mouseY > leaderboardButton.y && mouseY < leaderboardButton.y + leaderboardButton.height) {
+        autoShowLeaderboard = !autoShowLeaderboard;
+        if (autoShowLeaderboard) {
+          fetchLeaderboard();
+        }
       }
     }
-    // Click elsewhere to deselect
-    else {
-      isEnteringName = false;
-    }
-  } else if (gameState === "gameover" && autoShowLeaderboard) {
-    // Back button in leaderboard view
+  }
+  
+  // Handle back button in leaderboard view
+  if (gameState === "gameover" && autoShowLeaderboard) {
     if (mouseX > 150 && mouseX < 250 && mouseY > 450 && mouseY < 480) {
       autoShowLeaderboard = false;
     }
   }
+  
+  return false;
 }
 
-// Handle keyboard input for name
-function keyTyped() {
-  if (gameState === "gameover" && !nameSubmitted && isEnteringName) {
-    // Add character to name if it's a printable character
-    if (key.length === 1 && playerName.length < 20) {
-      playerName += key;
-      return false;
-    }
+function touchMoved() {
+  if (gameState === "playing") {
+    // Move spaceship based on touch movement
+    let dx = mouseX - touchStartX;
+    let dy = mouseY - touchStartY;
+    
+    spaceshipX = constrain(spaceshipX + dx, 10, width - 10);
+    spaceshipY = constrain(spaceshipY + dy, 20, height - 20);
+    
+    touchStartX = mouseX;
+    touchStartY = mouseY;
   }
-  return true;
+  return false;
 }
 
-// Add a simple error handler to catch any global errors
-window.onerror = function(message, source, lineno, colno, error) {
-  console.error("Game error:", message, "at line", lineno);
-  
-  // Try to display error on canvas
-  if (typeof fill === 'function' && typeof textSize === 'function') {
-    fill(255, 0, 0);
-    textSize(14);
-    textAlign(CENTER);
-    text("Error: " + message, width/2, height/2);
-  }
-  
-  return true; // Prevents the default error handling
-};
+function touchEnded() {
+  isShooting = false;
+  return false;
+}

@@ -2,21 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Star Shooting Game</title>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
-  <!-- Update Supabase Client to use a specific version -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.33.1"></script>
   <style>
     body {
       margin: 0;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      background-color: #111;
+      min-height: 100vh;
+      background: #000;
+      touch-action: none; /* Prevents default touch behaviors */
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      touch-action: none;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="game.js"></script>
 </head>
 <body>
   <script>
@@ -32,6 +39,5 @@
       return supabase.createClient(url, key);
     }
   </script>
-  <script src="game.js"></script>
 </body>
 </html>
